@@ -170,8 +170,8 @@ if __name__ == '__main__':
     torch.distributed.init_process_group(backend="nccl")
 
     file_path = "logger_ddp_{:s}_{:d}.txt".format(current_time, os.getpid())
-    f_log = open(file_path, 'w')
     if rank == 0:
+        f_log = open(file_path, 'w')
         _print_and_log("Log saved at {:s}".format(file_path), f_log)
         _print_and_log("DDP is ON. Process PID: {}. DDP setup: {} ".format(os.getpid(), env_dict), f_log)
         _print_and_log("#GPUs: {:d}. Current rank: {:d}".format(world_size, rank), f_log)
