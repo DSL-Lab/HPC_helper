@@ -33,7 +33,7 @@ optimizer = torch.optim.SGD(net.parameters(), 0.01)
 with torch.profiler.profile(
         schedule=torch.profiler.schedule(wait=2, warmup=2, active=6, repeat=1, skip_first=2),
         on_trace_ready=tensorboard_trace_handler("tmp/profile"),
-        with_stack=True, with_flops=True, with_modules=True) as profiler:
+        with_stack=True, with_flops=True, with_modules=True, profile_memory=True) as profiler:
 
     for i in range(0, 20):
         t0 = time.time()
