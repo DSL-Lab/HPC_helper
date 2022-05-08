@@ -1,6 +1,7 @@
 mnist_data
 logger*
 venv*
+tmp/
 .idea
 
 # Byte-compiled / optimized / DLL files

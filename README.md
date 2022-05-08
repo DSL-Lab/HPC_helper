@@ -24,3 +24,8 @@ wget http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz -P ./mnist_data/
 ```bash
 qsub run_benchmark.pbs
 ```
+
+## GPU profiling
+```bash
+python benchmark_layernorm.py
+```
