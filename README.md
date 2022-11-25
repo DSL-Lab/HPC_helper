@@ -2,16 +2,15 @@
 
 ## Get started
 ```bash
-# load python 3.7 at HPC
-# module load gcc python/3.7.9 StdEnv/2020 cudacore/.11.4.2 nccl/2.11.4 # CC
-# module load gcc/7.5.0 python/3.7 nccl # Sockeye
+# load python 3.8 at HPC
+# module load gcc/11.3.0 python/3.8.10 StdEnv/2020 cuda/11.7 nccl/2.12.12 # CC
+# module load gcc/9.4.0 python/3.8.10 cuda/11.3.1 nccl/2.9.9-1-cuda11-3 # Sockeye
 
-# python venv
+# python virtual environment
 python -m venv venvhpc
 source venvhpc/bin/activate
 pip install -U pip
 pip install -r requirements.txt
-pip install torch==1.10.1+cu113 torchvision==0.11.2+cu113 torchaudio==0.10.1 -f https://download.pytorch.org/whl/torch_stable.html
 
 # download MNIST dataset
 mkdir -p ./mnist_data/MNIST/raw
