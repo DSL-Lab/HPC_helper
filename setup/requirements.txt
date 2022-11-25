@@ -4,3 +4,5 @@ torchvision
 torchaudio
 tqdm
 numpy
+ml_collections
+torch_tb_profiler

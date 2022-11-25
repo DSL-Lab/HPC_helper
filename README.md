@@ -10,7 +10,7 @@
 python -m venv venvhpc
 source venvhpc/bin/activate
 pip install -U pip
-pip install -r requirements.txt
+pip install -r setup/requirements.txt
 
 # download MNIST dataset
 mkdir -p ./mnist_data/MNIST/raw
