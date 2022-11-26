@@ -5,15 +5,11 @@ import pdb
 import shutil
 import random
 import sys
-import time
-from pprint import pformat
 from datetime import datetime
 import numpy as np
 import torch
-import yaml
 import torch.distributed as dist
 from torch.utils.tensorboard import SummaryWriter
-from ml_collections import config_dict
 
 from utils.dist_training import get_ddp_save_flag
 
