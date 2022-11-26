@@ -1,6 +1,7 @@
 # HPC_helper
 
 ## Get started
+### Setup python environment
 ```bash
 # load python 3.8 at HPC
 # module load gcc/11.3.0 python/3.8.10 StdEnv/2020 cuda/11.7 nccl/2.12.12 # CC
@@ -21,10 +22,11 @@ wget http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz -P ./mnist_data/
 ```
 ## Go benchmarking
 ```bash
-qsub run_benchmark.pbs
+# at Sockeye
+qsub script/demo_sockeye.sh
 ```
 
-## GPU profiling
+## GPU profiling (*to-be-updated*)
 ```bash
-python benchmark_layernorm.py
+python helper/benchmark_layernorm.py
 ```
