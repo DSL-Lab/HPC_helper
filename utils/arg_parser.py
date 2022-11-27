@@ -29,9 +29,9 @@ def parse_arguments():
                         help='To use DDP distributed learning')
     parser.add_argument('--ddp_gpu_ids', nargs='+', default=None,
                         help="A list of GPU IDs to run distributed learning")
-    parser.add_argument('--batch_size', default=1024, type=int,
+    parser.add_argument('--batch_size', default=256, type=int,
                         help='Training batch size.')
-    parser.add_argument('--epoch', default=10, type=int,
+    parser.add_argument('--epoch', default=5, type=int,
                         help='Training epochs.')
     parser.add_argument('--seed', default=1234, type=int,
                         help='Random seed.')

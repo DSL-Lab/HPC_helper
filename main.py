@@ -63,28 +63,33 @@ def init_dataloader(batch_size, dist_helper):
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,)),
-        transforms.Resize(64)  # resize to larger image to showcase the use of GPU profiling
+        transforms.Resize(128)  # resize to larger image to showcase the use of GPU profiling
     ])
     dataset_loc = './mnist_data'
 
     train_dataset = datasets.MNIST(dataset_loc, download=True, train=True, transform=transform)
 
-    # It is advised not to use distributed sampler for the test or validation sets, due to possibly incorrect results.
+    # For final evaluation, it is advised not to use distributed sampler due to possibly incorrect results.
+    # But we are using it now to accelerate evaluation during training.
     # Ref: https://github.com/pytorch/pytorch/issues/25162
     test_dataset = datasets.MNIST(dataset_loc, download=True, train=False, transform=transform)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size,
-                             shuffle=True, pin_memory=True, num_workers=min(6, os.cpu_count()))
 
     logging.info("Training set size: {:d}, testing set size: {:d}".format(len(train_dataset), len(test_dataset)))
 
     if dist_helper.is_ddp:
-        sampler = DistributedSampler(train_dataset, shuffle=True)
         batch_size_per_gpu = max(1, batch_size // dist.get_world_size())
+        sampler = DistributedSampler(train_dataset, shuffle=True)
         train_loader = DataLoader(dataset=train_dataset, sampler=sampler, batch_size=batch_size_per_gpu,
                                   pin_memory=True, num_workers=min(6, os.cpu_count()))
+
+        sampler = DistributedSampler(test_dataset, shuffle=False)
+        test_loader = DataLoader(dataset=test_dataset, sampler=sampler, batch_size=batch_size_per_gpu,
+                                 pin_memory=True, num_workers=min(6, os.cpu_count()))
     else:
         train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size,
                                   shuffle=True, pin_memory=True, num_workers=min(6, os.cpu_count()))
+        test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size,
+                                 shuffle=False, pin_memory=True, num_workers=min(6, os.cpu_count()))
 
     return train_loader, test_loader
 
@@ -123,7 +128,7 @@ def go_training(epochs, model, optimizer, criterion, dist_helper, train_loader, 
 
         # calculate validation loss
         time_val = time.time()
-        val_loss = 0
+        val_loss = 0.0
         pbar = tqdm(test_loader)
         model.eval()
         with torch.no_grad():

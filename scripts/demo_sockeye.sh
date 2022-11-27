@@ -20,23 +20,26 @@ cd ${PBS_O_WORKDIR}
 
 source venvhpc/bin/activate
 
+# note: at Sockeye, it's better to specify CUDA_VISIBLE_DEVICES explicitly for distributed training,
+# otherwise methods in torch.cuda may lead to an error, e.g., torch.cuda.device_count()
+
 # single GPU: use 1 GPU on 1 node
-#CUDA_VISIBLE_DEVICES=0 python main.py --batch_size=3072 -m=sockeye_demo_single_gpu
+CUDA_VISIBLE_DEVICES=0 python main.py --batch_size=768 -m=sockeye_demo_single_gpu
 
 # DP: use multiple GPUs on 1 node
-#CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py --batch_size=12288 --dp -m=sockeye_demo_single_node_dp
+CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py --batch_size=3072 --dp -m=sockeye_demo_single_node_dp
 
 # DDP: use multiple GPUs on 1 node
-torchrun --nnodes=1 --nproc_per_node=4 --master_port=$MASTER_PORT main.py --batch_size=12288 --ddp --ddp_gpu_ids 0 1 2 3 -m=sockeye_demo_single_node_ddp
+CUDA_VISIBLE_DEVICES=0,1,2,3 torchrun --nnodes=1 --nproc_per_node=4 --master_port=$MASTER_PORT main.py --batch_size=3072 --ddp -m=sockeye_demo_single_node_ddp
 
 # DDP: use multiple GPUs on multiple nodes
 mpirun -np 8 \
 --hostfile $PBS_NODEFILE --oversubscribe \
 -x MASTER_ADDR=$(hostname) \
 -x MASTER_PORT=$MASTER_PORT \
+-x CUDA_VISIBLE_DEVICES=0,1,2,3 \
 -x PATH \
 -bind-to none -map-by :OVERSUBSCRIBE \
 -mca pml ob1 -mca btl ^openib \
-python main.py --batch_size=24576 --ddp -m=sockeye_demo_multiple_node_ddp
-
+python main.py --batch_size=6144 --ddp -m=sockeye_demo_multiple_node_ddp
 
