@@ -8,10 +8,11 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 
 
 class DistributedHelper(object):
-    def __init__(self, flag_dp, flag_ddp, ddp_gpu_ids):
+    def __init__(self, flag_dp, flag_ddp, ddp_gpu_ids, init_method):
         self.flag_dp = flag_dp
         self.flag_ddp = flag_ddp
         self.ddp_gpu_ids = ddp_gpu_ids
+        self.init_method = init_method
 
         if (self.flag_dp or self.flag_ddp) and ddp_gpu_ids is None:
             assert torch.cuda.device_count() > 1, "Number of GPU must be more than one to use distributed learning!"
@@ -56,7 +57,7 @@ class DistributedHelper(object):
             torch.cuda.set_device(gpu_id)  # set single gpu device per process
         else:
             torch.cuda.set_device(local_rank)  # set single gpu device per process
-        dist.init_process_group(backend="nccl", rank=env_dict['WORLD_RANK'], world_size=env_dict['WORLD_SIZE'])
+        dist.init_process_group(backend="nccl", init_method=self.init_method, rank=env_dict['WORLD_RANK'], world_size=env_dict['WORLD_SIZE'])
 
     def dist_adapt_model(self, model):
         """

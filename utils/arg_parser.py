@@ -35,6 +35,8 @@ def parse_arguments():
                         help='Training epochs.')
     parser.add_argument('--seed', default=1234, type=int,
                         help='Random seed.')
+    parser.add_argument('--ddp_init_method', default='env://', type=str,
+                        help='torch.distributed.init_process_group options.')
 
     args = parser.parse_args()
 

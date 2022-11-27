@@ -27,7 +27,7 @@ def init_basics():
     Initialization
     """
     args = parse_arguments()
-    dist_helper = DistributedHelper(args.dp, args.ddp, args.ddp_gpu_ids)
+    dist_helper = DistributedHelper(args.dp, args.ddp, args.ddp_gpu_ids, args.ddp_init_method)
     writer = set_seed_and_logger(args.seed, args.logdir, args.log_level, args.comment, dist_helper)
     backup_code(args.logdir)
     return args, dist_helper, writer
