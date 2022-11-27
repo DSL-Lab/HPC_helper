@@ -27,7 +27,7 @@ CUDA_VISIBLE_DEVICES=0 python main.py --batch_size=3072 -m=sockeye_demo_single_g
 CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py --batch_size=12288 --dp -m=sockeye_demo_single_node_dp
 
 # DDP: use multiple GPUs on 1 node
-torchrun --nnodes=1 --nproc_per_node=4 --master_port=$MASTER_PORT main.py --batch_size=12288 --ddp -m=sockeye_demo_single_node_ddp
+torchrun --nnodes=1 --nproc_per_node=4 --master_port=$MASTER_PORT main.py --batch_size=12288 --ddp --ddp_gpu_ids 1,2,3,4 -m=sockeye_demo_single_node_ddp
 
 # DDP: use multiple GPUs on multiple nodes
 mpirun -np 8 \
@@ -37,6 +37,6 @@ mpirun -np 8 \
 -x PATH \
 -bind-to none -map-by :OVERSUBSCRIBE \
 -mca pml ob1 -mca btl ^openib \
-main.py --batch_size=24576 --ddp -m=sockeye_demo_multiple_node_ddp
+python main.py --batch_size=24576 --ddp -m=sockeye_demo_multiple_node_ddp
 
 

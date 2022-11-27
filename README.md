@@ -23,7 +23,7 @@ wget http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz -P ./mnist_data/
 ## Go benchmarking
 ```bash
 # at Sockeye
-qsub script/demo_sockeye.sh
+qsub scripts/demo_sockeye.sh
 ```
 
 ## GPU profiling (*to-be-updated*)
