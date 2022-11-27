@@ -2,8 +2,8 @@
 #SBATCH --account=def-rjliao
 #SBATCH --gres=gpu:v100l:4        # Number of GPUs per node (specifying v100l gpu)
 #SBATCH --nodes=2                 # Number of nodes
-#SBATCH --ntasks=1                # Number of MPI process
-#SBATCH --ntasks-per-node=1       # Number of distributed process per compute node
+#SBATCH --ntasks=8                # Number of MPI process
+#SBATCH --ntasks-per-node=4       # Number of distributed process per compute node
 #SBATCH --cpus-per-task=8         # CPU cores per MPI process
 #SBATCH --mem=32G                 # memory per node
 #SBATCH --time=00-00:20            # time (DD-HH:MM)
