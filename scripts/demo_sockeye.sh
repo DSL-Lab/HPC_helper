@@ -21,13 +21,13 @@ cd ${PBS_O_WORKDIR}
 source venvhpc/bin/activate
 
 # single GPU: use 1 GPU on 1 node
-CUDA_VISIBLE_DEVICES=0 python main.py --batch_size=3072 -m=sockeye_demo_single_gpu
+#CUDA_VISIBLE_DEVICES=0 python main.py --batch_size=3072 -m=sockeye_demo_single_gpu
 
 # DP: use multiple GPUs on 1 node
-CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py --batch_size=12288 --dp -m=sockeye_demo_single_node_dp
+#CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py --batch_size=12288 --dp -m=sockeye_demo_single_node_dp
 
 # DDP: use multiple GPUs on 1 node
-torchrun --nnodes=1 --nproc_per_node=4 --master_port=$MASTER_PORT main.py --batch_size=12288 --ddp --ddp_gpu_ids 1,2,3,4 -m=sockeye_demo_single_node_ddp
+torchrun --nnodes=1 --nproc_per_node=4 --master_port=$MASTER_PORT main.py --batch_size=12288 --ddp --ddp_gpu_ids 0 1 2 3 -m=sockeye_demo_single_node_ddp
 
 # DDP: use multiple GPUs on multiple nodes
 mpirun -np 8 \
