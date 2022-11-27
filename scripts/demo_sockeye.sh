@@ -41,5 +41,5 @@ mpirun -np 8 \
 -x PATH \
 -bind-to none -map-by :OVERSUBSCRIBE \
 -mca pml ob1 -mca btl ^openib \
-python main.py --batch_size=6144 --ddp -m=sockeye_demo_multiple_node_ddp
+python main.py --batch_size=6144 --ddp -m=sockeye_demo_multiple_node_mpi_ddp
 
