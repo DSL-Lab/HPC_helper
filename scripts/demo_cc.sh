@@ -40,17 +40,34 @@ source venvhpc/bin/activate
 # DDP: use multiple GPUs on multiple nodes
 
 # mpirun method
-#mpirun -np 8 \
-#-x MASTER_ADDR=$(hostname) \
-#-x MASTER_PORT=$MASTER_PORT \
-#-x PATH \
-#-bind-to none -map-by :OVERSUBSCRIBE \
-#-mca pml ob1 -mca btl ^openib \
-#python main.py --batch_size=6144 --ddp -m=cc_demo_multiple_node_mpi_ddp
+mpirun -np 8 \
+-x MASTER_ADDR=$(hostname) \
+-x MASTER_PORT=$MASTER_PORT \
+-x PATH \
+-bind-to none -map-by :OVERSUBSCRIBE \
+-mca pml ob1 -mca btl ^openib \
+python main.py --batch_size=6144 --ddp -m=cc_demo_multiple_node_mpi_ddp
 
 # srun method
-# The SLURM_NTASKS variable tells the script how many processes are available for this execution. “srun” executes the script <tasks-per-node * nodes> times
-export CUDA_VISIBLE_DEVICES=1,2,3,4
-srun torchrun --nnodes=2 --nproc_per_node=4 \
+# The SLURM_NTASKS variable tells the script how many processes are available for this execution.
+# “srun” executes the script <tasks-per-node * nodes> times
+
+# Therefore, for error-free srun execution, we need to overwrite the SBATCH options set in the very beginning
+# by using --ntasks=2 --ntasks-per-node=1 explicitly.
+# Note: the nuance is --ntasks=8 --ntasks-per-node=4 works for mpirun + python main.py --args,
+# while --ntasks=2 --ntasks-per-node=1 works for srun + torchrun.
+
+srun --ntasks-per-node=1 --ntasks=2 torchrun --nnodes=2 --nproc_per_node=4 \
 --rdzv_id=$SLURM_JOB_ID --rdzv_backend=c10d --rdzv_endpoint=$(hostname):$MASTER_PORT \
---master_port=$MASTER_PORT main.py --batch_size=6144 --ddp -m=cc_demo_multiple_node_srun_ddp
+main.py --batch_size=6144 --ddp -m=cc_demo_multiple_node_srun_ddp
+
+##### DEBUG info #####
+#echo $SLURM_JOB_NODELIST
+#
+#echo $(hostname)
+#
+#echo $(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)
+#
+## extract the first string component before the first dot
+## cdr2639.int.cedar.computecanada.ca -> cdr2639
+#echo $(echo $(hostname) | cut -d '.' -f 1)
