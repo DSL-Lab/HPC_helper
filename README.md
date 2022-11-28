@@ -1,6 +1,11 @@
 # HPC_helper
 
+This repository shows a simple example of using PyTorch distributed training on UBC Sockeye and ComputeCanada HPCs, i.e., to run your training tasks on `N` nodes, with each node having `M` GPUs. It includes the commonly-used use cases such as [DataParallel (DP)](https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html) or [DistributedDataParallel (DDP)](https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html) and supports [PBS](https://2020.help.altair.com/2020.1/PBSProfessional/PBSUserGuide2020.1.1.pdf) and [SLURM](https://slurm.schedmd.com/documentation.html) systems.
+
+Last updated: Nov 27, 2022. Contact: Qi Yan, qi.yan@ece.ubc.ca 
+
 ## Get started
+
 ### Setup python environment
 ```bash
 # load python 3.8 at HPC
@@ -23,7 +28,7 @@ wget http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz -P ./mnist_data
 wget http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz -P ./mnist_data/MNIST/raw
 wget http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz -P ./mnist_data/MNIST/raw
 ```
-## Go training
+### Go training
 We showcase the use of distributed learning for a simple training task using ResNet50 as backbone.
 
 **IMPORTANT**: please change the account and notification email address in the bash script before running.
@@ -48,14 +53,14 @@ Please check the training logs at `runs` for runtime comparison. Hear are five-e
 
 ## Distributed training rule of thumb
 
-Generally, we could either use [DataParallel (DP)](https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html) or [DistributedDataParallel (DDP)](https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html) protocol to start distributed training. DP is straightforward and only involves changes to a few lines of code. However, its efficiency is worse than DDP; please see [this page](https://pytorch.org/docs/stable/notes/cuda.html#use-nn-parallel-distributeddataparallel-instead-of-multiprocessing-or-nn-dataparallel) for why. Moreover, DP doesn't support multi-node distributed training. Therefore, it's better to always start with DDP despite its relatively higher complexity.
+Generally, we could either use [DataParallel (DP)](https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html) or [DistributedDataParallel (DDP)](https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html) protocol to start distributed training. DP is straightforward and only involves changes to a few lines of code. However, its efficiency is worse than DDP; please see [this page](https://pytorch.org/docs/stable/notes/cuda.html#use-nn-parallel-distributeddataparallel-instead-of-multiprocessing-or-nn-dataparallel) for why. Moreover, DP doesn't support multi-node distributed training. Therefore, it's better to always start with DDP despite its relatively higher complexity. The table belows shows the possible way to launch your distributed training jobs.
 
 
 | #Nodes | #GPUs per node | PyTorch Distirbuted Method | Launch Method at Sockeye | Launch Method at CC |
 |--------|----------------|----------------------------|---------------------------|----------------------|
 | N=1    | M=1            | N/A                        | N/A                       | N/A                  |
-| N=1    | M>1            | DDP, DP                    | torchrun                  | torchrun             |
-| N>1    | M>1            | DDP                        | mpirun + python           | mpirun + python, srun + torchrun   |
+| N=1    | M>1            | DDP or DP                 | torchrun                  | torchrun             |
+| N>1    | M>1            | DDP                        | mpirun + python           | mpirun + python or srun + torchrun |
 
 
 ### Difference between Sockeye's PBS and CC's SLURM systems
@@ -80,8 +85,6 @@ The `mpirun` is executed once, then the parallel jobs will be launched and their
  `mpirun + python` comes with an option `-np` which specifies the number of processes in total. In our demo script, each process amounts to one trainer (i.e., one GPU), and we use `-np=8` for 2 nodes with 8 GPUs in total. This must be used along with `--oversubscribe`, and the reasons are as follows.
 
 `mpirun` assigns job processes to nodes using [`slot`](https://www.open-mpi.org/doc/v4.0/man1/mpirun.1.php#sect3) scheduling, which was originally intended for CPU-only tasks due to historical reasons (one process amounts to one CPU core). However, such slot assignment may go wrong in the age of GPU training, as now we need to view one GPU as one process. For example, Sockeye's PBS would not distribute 8 tasks equal to the 2 nodes and instead would raise an error indicating the number of available slots is insufficient. Therefore, we need to use the `--oversubscribe` option to enforce that `mpirun` does distribute tasks equally to each node and ignores the possible false alarm errors.
-
-
 
 **`srun + torchrun` method explained**
 
