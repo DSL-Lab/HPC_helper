@@ -89,6 +89,13 @@ class DistributedHelper(object):
         else:
             pass
 
+    def clean_up(self):
+        self.ddp_sync()
+        if self.flag_ddp and dist.is_initialized():
+            dist.destroy_process_group()
+        else:
+            pass
+
     @staticmethod
     def get_ddp_status():
         """

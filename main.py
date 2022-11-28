@@ -185,6 +185,9 @@ def main():
     """Go training"""
     go_training(args.epoch, model, optimizer, criterion, dist_helper, train_loader, test_loader, writer, args.logdir)
 
+    """Distributed training cleanup"""
+    dist_helper.clean_up()
+
     
 if __name__ == '__main__':
     main()
