@@ -17,8 +17,8 @@ module load openmpi
 
 # you should submit job from the cloned repo's directory
 cd ${PBS_O_WORKDIR}
-
 source venvhpc/bin/activate
+export OMP_NUM_THREADS=6
 
 # note: at Sockeye, it's better to specify CUDA_VISIBLE_DEVICES explicitly for distributed training,
 # otherwise methods in torch.cuda may lead to an error, e.g., torch.cuda.device_count()
