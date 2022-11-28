@@ -33,6 +33,57 @@ sbatch scripts/demo_cc.sh
 ```
 Please check the training logs at `runs` for runtime comparison.
 
+## Distributed training rule of thumb
+Generally, we could either use [DataParallel (DP)](https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html) or [DistributedDataParallel(DDP)](https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html) protocol to start distributed training.  DP is very easy to use and only involves changes to few lines of code. However, its efficiency is worse than DDP and please see [this page](https://pytorch.org/docs/stable/notes/cuda.html#use-nn-parallel-distributeddataparallel-instead-of-multiprocessing-or-nn-dataparallel) for why. Moreover, DP doesn't support multi-node distributed training. Therefore, it's better to always start with DDP despite its relatively higher complexity.
+
+
+| #Nodes | #GPUs per node | PyTorch Distirbuted Method | Launch Method at Sockeye | Launch Method at CC |
+|--------|----------------|----------------------------|---------------------------|----------------------|
+| N=1    | M=1            | N/A                        | N/A                       | N/A                  |
+| N=1    | M>1            | DDP, DP                    | torchrun                  | torchrun             |
+| N>1    | M>1            | DDP                        | mpirun + python           | mpirun + python, srun + torchrun   |
+
+
+### Difference between Sockeye's PBS and CC's SLURM systems
+At Sockeye/PBS system, `mpirun + python` seems to be the only viable way to launch multi-node training. At CC/SLURM system, we could use either `srun + torchrun` or `mpirun + python`. Essentially, both `mpirun` and `srun` are launching parallel jobs across different nodes *in one line of code*, and these two mechanisms are the key to the scalable multi-node DDP training. We use the following example to show the important details to avoid errors.
+
+**`mpirun + python` method explained**
+
+Sample commands:
+```bash
+mpirun -np 8 \
+--hostfile $PBS_NODEFILE --oversubscribe \
+-x MASTER_ADDR=$(hostname) \
+-x MASTER_PORT=$MASTER_PORT \
+-x CUDA_VISIBLE_DEVICES=0,1,2,3 \
+-x PATH \
+-bind-to none -map-by :OVERSUBSCRIBE \
+-mca pml ob1 -mca btl ^openib \
+python main.py --batch_size=6144 --ddp -m=sockeye_demo_multiple_node_mpi_ddp
+```
+The `mpirun` is executed once, the parallel jobs will be launched and their communications will be handled by PyTorch and `mpirun` altogether. The key is that we only need to **run `mpirun + python`  once on the master node**.
+
+ `mpirun + python` comes with an option `-np` which specifies the number of processes in total. In our demo script, each process amounts to one trainer (i.e., one GPU), and we use `-np=8` for 2 nodes with 8 GPUs in total. This must be used along with `--oversubscribe`, and the reasons are as follows.
+
+`mpirun` assigns job processes to nodes using [`slot`](https://www.open-mpi.org/doc/v4.0/man1/mpirun.1.php#sect3) scheduling, which was originally intended for CPU-only tasks due to history reasons (one process amounts to one CPU core). However, such slot assignment may go wrong in the age of GPU training, as now we need to view one GPU as one process. For example, the Sockeye's PBS would not distribute 8 tasks equally to the 2 nodes and instead would raise an error indicating the number of available slots is insufficient. Therefore, we need to use the `--oversubscribe` option to enforce that `mpirun` does distribute tasks equally to each node, and ignore the possible false alarm errors.
+
+
+
+**`srun + torchrun` method explained**
+
+Sample commands:
+
+```bash
+srun --ntasks-per-node=1 --ntasks=2 torchrun --nnodes=2 --nproc_per_node=4 \
+--rdzv_id=$SLURM_JOB_ID --rdzv_backend=c10d --rdzv_endpoint=$(hostname):$MASTER_PORT \
+main.py --batch_size=6144 --ddp -m=cc_demo_multiple_node_srun_ddp
+```
+
+The `SLURM_NTASKS` variable tells the script how many processes are available for this execution. `srun` executes the script `<tasks-per-node * nodes>` times. For `torchrun` launch method, we only need to **run it once per node**, and in our example, we are running `torchrun` commands twice on two nodes. Note that this is different than `mpirun + python`, where we *run it once for all nodes*.
+
+For error-free srun execution, we need to pay attention to the `#SBATCH` options set in the very beginning or enforcing these parameters by using `--ntasks=2 --ntasks-per-node=1` explicitly. The nuance is `--ntasks=8 --ntasks-per-node=4` works for `mpirun + python` method, while `--ntasks=2 --ntasks-per-node=1` works for `srun + torchrun`.
+
+
 ## GPU profiling (*to-be-updated*)
 ```bash
 python helper/benchmark_layernorm.py
@@ -42,6 +93,7 @@ python helper/benchmark_layernorm.py
 #### Tutorial
 * [Multi Node PyTorch Distributed Training Guide For People In A Hurry](https://lambdalabs.com/blog/multi-node-pytorch-distributed-training-guide)
 * [PyTorch with Multiple GPUs](https://docs.alliancecan.ca/wiki/PyTorch#PyTorch_with_Multiple_GPUs)
+* [Multi-node-training on slurm with PyTorch](https://gist.github.com/TengdaHan/1dd10d335c7ca6f13810fff41e809904)
 
 #### Helpful documentations
 * [pytorch torchrun](https://pytorch.org/docs/stable/elastic/run.html)
