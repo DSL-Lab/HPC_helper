@@ -25,9 +25,6 @@ cd ${SLURM_SUBMIT_DIR}
 source venvhpc/bin/activate
 export OMP_NUM_THREADS=6
 
-# note: at Sockeye, it's better to specify CUDA_VISIBLE_DEVICES explicitly for distributed training,
-# otherwise methods in torch.cuda may lead to an error, e.g., torch.cuda.device_count()
-
 # single GPU: use 1 GPU on 1 node
 CUDA_VISIBLE_DEVICES=0 python main.py --batch_size=768 -m=cc_demo_single_gpu
 
