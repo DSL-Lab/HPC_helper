@@ -1,6 +1,6 @@
 # HPC_helper
 
-This repository shows a simple example of using PyTorch distributed training on UBC Sockeye and ComputeCanada HPCs, i.e., to run your training tasks on `N` nodes, with each node having `M` GPUs. It includes the commonly-used use cases such as [DataParallel (DP)](https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html) or [DistributedDataParallel (DDP)](https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html) and supports [PBS](https://2020.help.altair.com/2020.1/PBSProfessional/PBSUserGuide2020.1.1.pdf) and [SLURM](https://slurm.schedmd.com/documentation.html) systems.
+This repository shows a simple example of using PyTorch distributed training on UBC Sockeye and ComputeCanada HPCs, i.e., to run your training tasks on `N` nodes, with each node having `M` GPUs. It includes the common use cases such as [DataParallel (DP)](https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html) or [DistributedDataParallel (DDP)](https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html) and supports [PBS](https://2020.help.altair.com/2020.1/PBSProfessional/PBSUserGuide2020.1.1.pdf) and [SLURM](https://slurm.schedmd.com/documentation.html) systems.
 
 Last updated: Nov 27, 2022. Contact: Qi Yan, qi.yan@ece.ubc.ca 
 
