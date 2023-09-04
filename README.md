@@ -1,25 +1,28 @@
 # HPC_helper
 
-This repository shows a simple example of using PyTorch distributed training on UBC Sockeye and ComputeCanada HPCs, i.e., to run your training tasks on `N` nodes, with each node having `M` GPUs. It includes the common use cases such as [DataParallel (DP)](https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html) or [DistributedDataParallel (DDP)](https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html) and supports [PBS](https://2020.help.altair.com/2020.1/PBSProfessional/PBSUserGuide2020.1.1.pdf) and [SLURM](https://slurm.schedmd.com/documentation.html) systems.
+This repository showcases a minimal example of using `PyTorch` distributed training on computing clusters, enabling you to run your training tasks on `N` nodes, each with `M` GPUs. It includes common use cases such as [DataParallel (DP)](https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html) or [DistributedDataParallel (DDP)](https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html) and offers support for [PBS](https://2020.help.altair.com/2020.1/PBSProfessional/PBSUserGuide2020.1.1.pdf) and [SLURM](https://slurm.schedmd.com/documentation.html) systems. Below, you'll find runnable code and scripts for UBC Sockeye, Vector Vaughan cluster, and Digital Research Alliance of Canada (formerly ComputeCanada) HPCs.
 
-Last updated: Nov 27, 2022. Contact: Qi Yan, qi.yan@ece.ubc.ca 
+Last updated: Sep 03, 2023. Contact: Qi Yan, qi.yan@ece.ubc.ca 
 
 ## Get started
 
 ### Setup python environment
 ```bash
 # load python 3.8 at HPC
-# module load gcc/11.3.0 python/3.8.10 StdEnv/2020 cuda/11.7 nccl/2.12.12 # CC
 # module load gcc/9.4.0 python/3.8.10 cuda/11.3.1 nccl/2.9.9-1-cuda11-3 # Sockeye
+# module load python/3.8 cuda-11.7 # Vector
+# module load gcc/11.3.0 python/3.8.10 StdEnv/2020 cuda/11.7 nccl/2.12.12 # CC
 
 # python virtual environment
 python -m venv venvhpc
 source venvhpc/bin/activate
 pip install -U pip
-pip install -r setup/requirements_cc.txt        # if at CC
 pip install -r setup/requirements_sockeye.txt   # if at Sockeye
+pip install -r setup/requirements_cc.txt        # if at Vector or CC
 
-python -c "import torch; print('Things are done.')"  # sanity check
+# sanity check at Sockeye or CC
+# you must enter an interactive session on Vector to tun this
+python -c "import torch; print('Things are done.')"  
 
 # download MNIST dataset
 mkdir -p ./mnist_data/MNIST/raw
@@ -31,25 +34,33 @@ wget http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz -P ./mnist_data/
 ### Go training
 We showcase the use of distributed learning for a simple training task using ResNet50 as backbone.
 
-**IMPORTANT**: please change the account and notification email address in the bash script before running.
+**IMPORTANT**: 
+* please change the account and notification email address in the bash script before running.
+* the Sockeye script is intended for OpenPBS system, which would be replaced by SLURM soon according to UBC ARC.
+* the Vector and CC scripts are intended for SLURM system, but we don't provide `preemption` support for Vector script.
 
 ```bash
 # at Sockeye
 qsub scripts/demo_sockeye.sh
+
+# at Vector
+sbatch scripts/demo_vector.sh
 
 # at CC
 sbatch scripts/demo_cc.sh
 ```
 Please check the training logs at `runs` for runtime comparison. Hear are five-epoch training time comparisons from my runs:
 
-| #Nodes | #GPUs per node | PyTorch Distirbuted Method | Sockeye runtime | CC runtime                   |
-| ------ | -------------- | -------------------------- | --------------- | ---------------------------- |
-| N=1    | M=1            | N/A                        | 363.4s          | 309.7s                       |
-| N=1    | M=4            | DP                         | 103.5s          | 114.2s                       |
-| N=1    | M=4            | DDP                        | 93.7s           | 85.2s                        |
-| N=2    | M=4            | DDP                        | 55.7s           | 47.0s (mpirun); 47.4s (srun) |
+| #Nodes | #GPUs per node | PyTorch Distirbuted Method | Sockeye runtime | CC runtime                   | Vector runtime                    |
+| ------ | -------------- | -------------------------- | --------------- | ---------------------------- | --------------------------------- |
+| N=1    | M=1            | N/A                        | 363.4s          | 309.7s                       | 425.0s                            |
+| N=1    | M=4            | DP                         | 103.5s          | 114.2s                       | 133.9s                            |
+| N=1    | M=4            | DDP                        | 93.7s           | 85.2s                        | 113.4s                            |
+| N=2    | M=4            | DDP                        | 55.7s           | 47.0s (mpirun); 47.4s (srun) | 60.9s (mpirun); 60.6s (srun)      |
 
-** The GPU used for training have the same specs at Sockeye and CC (Tesla V100-SXM2-32GB).
+In the demo script, we use Tesla V100-SXM2-32GB at Sockeye and CC, and RTX6000-24GB at Vector.
+The single-precision performance in terms of FLOPS is 15.7 TFLOPS for V100-SXM2-32GB and 16.3 TFLOPS for RTX6000-24GB.
+Therefore, the performance difference is mainly due to the GPU memory size.
 
 ## Distributed training rule of thumb
 
@@ -63,8 +74,8 @@ Generally, we could either use [DataParallel (DP)](https://pytorch.org/docs/stab
 | N>1    | M>1            | DDP                        | mpirun + python           | mpirun + python or srun + torchrun |
 
 
-### Difference between Sockeye's PBS and CC's SLURM systems
-At Sockeye/PBS system, `mpirun + python` seems to be the only viable way to launch multi-node training. At CC/SLURM system, we could use either `srun + torchrun` or `mpirun + python`. Essentially, both `mpirun` and `srun` are launching parallel jobs across different nodes *in one line of code*, and these two mechanisms are the key to scalable multi-node DDP training. We use the following example to show the crucial details to avoid errors.
+### Difference between PBS (Sockeye) and SLURM (Vector and CC) systems
+At PBS (Sockeye) system, `mpirun + python` seems to be the only viable way to launch multi-node training. At SLURM (Vector and CC) system, we could use either `srun + torchrun` or `mpirun + python`. Essentially, both `mpirun` and `srun` are launching parallel jobs across different nodes *in one line of code*, and these two mechanisms are the key to scalable multi-node DDP training. We use the following example to show the crucial details to avoid errors.
 
 **`mpirun + python` method explained**
 
@@ -106,10 +117,9 @@ If you are okay with the PyTorch's built-in distributed training utilities, the 
 Other third-party plugins like [horovod](https://horovod.ai/) and [pytorch lightning](https://www.pytorchlightning.ai/) can also possibly do the same things.
 
 
-## GPU profiling (*to-be-updated*)
-```bash
-python helper/benchmark_layernorm.py
-```
+## To-do
+- [ ] Add example for GPU profiling
+- [ ] Add support for preemption and checkpointing at Vector
 
 ## Reference
 #### Tutorial
@@ -123,3 +133,8 @@ python helper/benchmark_layernorm.py
 * [SLURM srun page](https://slurm.schedmd.com/srun.html)
 * [SLURM sbatch environment variables](https://slurm.schedmd.com/sbatch.html#SECTION_OUTPUT-ENVIRONMENT-VARIABLES)
 * [PBS qsub environment variables](https://opus.nci.org.au/display/Help/Useful+PBS+Environment+Variables)
+
+#### Wiki
+* [UBC Sockeye](https://confluence.it.ubc.ca/display/UARC/About+Sockeye)
+* [Vector](https://support.vectorinstitute.ai/FrontPage)
+* [CC](https://docs.alliancecan.ca/wiki/Technical_documentation)
