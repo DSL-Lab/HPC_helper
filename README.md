@@ -41,7 +41,7 @@ We showcase the use of distributed learning for a simple training task using Res
 
 ```bash
 # at Sockeye
-qsub scripts/demo_sockeye.sh
+sbatch scripts/demo_sockeye.sh
 
 # at Vector
 sbatch scripts/demo_vector.sh
