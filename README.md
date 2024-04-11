@@ -2,7 +2,7 @@
 
 This repository showcases a minimal example of using `PyTorch` distributed training on computing clusters, enabling you to run your training tasks on `N` nodes, each with `M` GPUs. It includes common use cases such as [DataParallel (DP)](https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html) or [DistributedDataParallel (DDP)](https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html) and offers support for [PBS](https://2020.help.altair.com/2020.1/PBSProfessional/PBSUserGuide2020.1.1.pdf) and [SLURM](https://slurm.schedmd.com/documentation.html) systems. Below, you'll find runnable code and scripts for UBC Sockeye, Vector Vaughan cluster, and Digital Research Alliance of Canada (formerly ComputeCanada) HPCs.
 
-Last updated: Sep 03, 2023. Contact: Qi Yan, qi.yan@ece.ubc.ca 
+Last updated: Apr 10, 2024. Contact: Qi Yan, qi.yan@ece.ubc.ca 
 
 ## Get started
 
@@ -36,8 +36,8 @@ We showcase the use of distributed learning for a simple training task using Res
 
 **IMPORTANT**: 
 * please change the account and notification email address in the bash script before running.
-* the Sockeye script is intended for OpenPBS system, which would be replaced by SLURM soon according to UBC ARC.
-* the Vector and CC scripts are intended for SLURM system, but we don't provide `preemption` support for Vector script.
+* the old Sockeye script is intended for OpenPBS system, which is no longer useful and kpet just for the sake of completeness.
+* the Sockeye, Vector and CC scripts are intended for SLURM system, but we don't provide `preemption` support for Vector script.
 
 ```bash
 # at Sockeye
@@ -74,8 +74,8 @@ Generally, we could either use [DataParallel (DP)](https://pytorch.org/docs/stab
 | N>1    | M>1            | DDP                        | mpirun + python           | mpirun + python or srun + torchrun |
 
 
-### Difference between PBS (Sockeye) and SLURM (Vector and CC) systems
-At PBS (Sockeye) system, `mpirun + python` seems to be the only viable way to launch multi-node training. At SLURM (Vector and CC) system, we could use either `srun + torchrun` or `mpirun + python`. Essentially, both `mpirun` and `srun` are launching parallel jobs across different nodes *in one line of code*, and these two mechanisms are the key to scalable multi-node DDP training. We use the following example to show the crucial details to avoid errors.
+### Difference between PBS (old Sockeye) and SLURM (Vector and CC) systems
+At PBS (old Sockeye) system, `mpirun + python` seems to be the only viable way to launch multi-node training. At SLURM (Vector and CC) system, we could use either `srun + torchrun` or `mpirun + python`. Essentially, both `mpirun` and `srun` are launching parallel jobs across different nodes *in one line of code*, and these two mechanisms are the key to scalable multi-node DDP training. We use the following example to show the crucial details to avoid errors.
 
 **`mpirun + python` method explained**
 
@@ -95,7 +95,7 @@ The `mpirun` is executed once, then the parallel jobs will be launched and their
 
  `mpirun + python` comes with an option `-np` which specifies the number of processes in total. In our demo script, each process amounts to one trainer (i.e., one GPU), and we use `-np=8` for 2 nodes with 8 GPUs in total. This must be used along with `--oversubscribe`, and the reasons are as follows.
 
-`mpirun` assigns job processes to nodes using [`slot`](https://www.open-mpi.org/doc/v4.0/man1/mpirun.1.php#sect3) scheduling, which was originally intended for CPU-only tasks due to historical reasons (one process amounts to one CPU core). However, such slot assignment may go wrong in the age of GPU training, as now we need to view one GPU as one process. For example, Sockeye's PBS would not distribute 8 tasks equal to the 2 nodes and instead would raise an error indicating the number of available slots is insufficient. Therefore, we need to use the `--oversubscribe` option to enforce that `mpirun` does distribute tasks equally to each node and ignores the possible false alarm errors.
+`mpirun` assigns job processes to nodes using [`slot`](https://www.open-mpi.org/doc/v4.0/man1/mpirun.1.php#sect3) scheduling, which was originally intended for CPU-only tasks due to historical reasons (one process amounts to one CPU core). However, such slot assignment may go wrong in the age of GPU training, as now we need to view one GPU as one process. For example, old Sockeye's PBS would not distribute 8 tasks equal to the 2 nodes and instead would raise an error indicating the number of available slots is insufficient. Therefore, we need to use the `--oversubscribe` option to enforce that `mpirun` does distribute tasks equally to each node and ignores the possible false alarm errors.
 
 **`srun + torchrun` method explained**
 

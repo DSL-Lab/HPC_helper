@@ -1,16 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name=demo_sockeye
-#SBATCH --account=st-rjliao-1-gpu
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=24
-#SBATCH --mem=32G
-#SBATCH --time=00:20:00
-#SBATCH --gpus-per-node=1
-#SBATCH --output=slurm-%j_out.txt
-#SBATCH --error=slurm-%j_err.txt
-#SBATCH --mail-user=yanq@student.ubc.ca
-#SBATCH --mail-type=ALL
+#PBS -l walltime=00:20:00,select=2:ncpus=8:ngpus=4:mem=64gb:gpu_mem=32gb
+#PBS -N sockeye_demo
+#PBS -A st-rjliao-1-gpu
+#PBS -m abe
+#PBS -M yanq@student.ubc.ca
+ 
 ################################################################################
 
 # in this demo, we take 2 nodes and each node has 4 V100-32GB GPUs
