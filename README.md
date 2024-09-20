@@ -11,7 +11,7 @@ Last updated: Jun 23, 2024. Contact: Qi Yan, qi.yan@ece.ubc.ca
 # load python 3.8 at HPC
 # module load gcc/9.4.0 python/3.8.10 cuda/11.3.1 nccl/2.9.9-1-cuda11-3 # Sockeye
 # module load python/3.8 cuda-11.7 # Vector
-# module load gcc/11.3.0 python/3.8.10 StdEnv/2020 cuda/11.7 nccl/2.12.12 # CC
+# module load python/3.10.13 StdEnv/2023 # CC
 
 # python virtual environment
 python -m venv venvhpc
@@ -26,10 +26,10 @@ python -c "import torch; print('Things are done.')"
 
 # download MNIST dataset
 mkdir -p ./mnist_data/MNIST/raw
-wget http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz -P ./mnist_data/MNIST/raw
-wget http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz -P ./mnist_data/MNIST/raw
-wget http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz -P ./mnist_data/MNIST/raw
-wget http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz -P ./mnist_data/MNIST/raw
+wget https://raw.githubusercontent.com/fgnt/mnist/master/train-images-idx3-ubyte.gz -P ./mnist_data/MNIST/raw
+wget https://raw.githubusercontent.com/fgnt/mnist/master/train-labels-idx1-ubyte.gz -P ./mnist_data/MNIST/raw
+wget https://raw.githubusercontent.com/fgnt/mnist/master/t10k-images-idx3-ubyte.gz -P ./mnist_data/MNIST/raw
+wget https://raw.githubusercontent.com/fgnt/mnist/master/t10k-labels-idx1-ubyte.gz -P ./mnist_data/MNIST/raw
 ```
 On Alliance/CC clusters, you can only `pip install` python packages available on the system and `conda` is forbidden.
 If you need to install additional packages, you can use the [`apptainer` container environment](https://docs.alliancecan.ca/wiki/Apptainer/en).
