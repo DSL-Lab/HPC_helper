@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=demo_vector
-#SBATCH --partition=rtx6000         # Type of GPUs
+#SBATCH --job-name=demo_moss
+#SBATCH --partition=a100            # Type of GPUs
 #SBATCH --gres=gpu:4                # Number of GPUs per node
 #SBATCH --nodes=2                   # Number of nodes
 #SBATCH --ntasks=8                  # Number of MPI process
@@ -8,7 +8,6 @@
 #SBATCH --cpus-per-task=8           # CPU cores per MPI process
 #SBATCH --mem=64G                   # memory per node
 #SBATCH --time=00-00:20             # time (DD-HH:MM)
-#SBATCH --qos=normal                # QoS type
 #SBATCH --mail-user=yanq@student.ubc.ca # send email regarding task status
 #SBATCH --mail-type=ALL
 #SBATCH --output=slurm-%j_out.txt
@@ -19,9 +18,6 @@
 # in this demo, we take 2 nodes and each node has 4 RTX6000-24GB GPUs
 MASTER_PORT=29400
 
-module use /pkgs/environment-modules/
-module load python/3.8
-module load cuda-11.7
 source venvhpc/bin/activate
 
 
